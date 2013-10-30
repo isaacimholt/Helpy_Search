@@ -1,0 +1,164 @@
+
+!OFF ==== INSTRUCTIONS ====
+
+Freebase Helpy is a program that allows you to open webpages quickly.
+This file configures Helpy. You can alter it to suit your needs.
+When you select some text and press ctrl + spacebar, Helpy scans this file to determine what urls to open.
+You can add your own urls, one on each line.
+Each line must be a url or a command or blank. Anything else will cause the program to explode. For instance, the first line of this file begins the !OFF command, which starts a section where all lines are ignored by Helpy until an !ON command is found.
+
+Default Behavior:
+
+1) If the text is a url, it will open it in your browser.
+
+2) If the text starts with a slash (/) it will make a url with freebase and go there (this is very useful for MIDs)
+
+3) If the text is an imdb or musicbrainz key it will open its appropriate page.
+
+4) If the text is none of the above: it will insert your text in the URLs specified further down in this file and open them. (for searching google/imdb/freebase/wikipedia etc)
+
+Note: before doing any of the above, it will remove any spaces at either end of the text -- so you can be a bit sloppy when you select text.
+
+Tip: you can click on a spreadsheet cell that has only an MID in it and press ctrl + spacebar -- you don't need to actually select the text in this case.
+
+!ON
+
+; Any line that begins with a semicolon (;) is always ignored by Helpy.
+; ==== SPECIAL CASES ====
+    
+    ; Any spaces at the start or end of a line are ignored.
+    ; !REGEX is a command that takes a regular expression.
+    ; if your text matches the regex, the urls that follow are opened.
+    ; place || in the url where you wish your text to be placed.
+    
+    ; open MID or other partial freebase url
+    !REGEX ^/
+    http://www.freebase.com||
+    
+    ; open urls (taken from: http://gist.github.com/823381)
+    !REGEX ^(https?://|www\.)[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?$
+    ||
+    
+    ; open partial urls (e.g. gmail.com or it.wikipedia.org)
+    !REGEX ^[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?$
+    http://||
+    
+    ; open imdb person from key (e.g. nm09123)
+    !REGEX ^nm\d+$
+    http://www.imdb.com/name/||/
+    
+    ; open imdb title from key (e.g. tt000435)
+    !REGEX ^tt\d+$
+    http://www.imdb.com/title/||/
+    
+    ; open imdb event from key (e.g. ev0000915)
+    !REGEX ^ev\d+$
+    http://www.imdb.com/event/||/
+    
+    ; open imdb character from key (e.g. ch0306193)
+    !REGEX ^ch\d+$
+    http://www.imdb.com/character/||/
+    
+    ; open imdb news article from key (e.g. ni52975081)
+    !REGEX ^ni\d+$
+    http://www.imdb.com/news/||/
+    
+    ; open imdb video page from key (e.g. vi1697356825)
+    !REGEX ^vi\d+$
+    http://www.imdb.com/video/||/
+    
+    ; open musicbrainz page from MBID
+    ; regex was found here: https://github.com/Dremora/foo_musicbrainz/blob/master/QueryByMBIDDialog.h
+    !REGEX ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+    http://musicbrainz.org/otherlookup/mbid?other-lookup.mbid=||
+
+; ==== CATCH ALL OTHER TEXT ====
+; this regex will match anything
+!REGEX
+
+; add your own custom search urls now
+; here are some to get you started:
+
+; you can use !OFF and !ON to create toggleable sections
+!OFF ==== SEARCH GOOGLE ====
+    ; inside of || we can place some options
+    ; "e" will encode your text (such as spaces into pluses, etc.)
+    ; "q" will put quotes around your text
+    http://www.google.com/search?q=|eq|
+
+!ON ==== SEARCH FREEBASE ====
+    http://www.freebase.com/search?query=|e|
+
+!OFF ==== SEARCH WIKIPEDIA ====
+	http://en.wikipedia.org/w/index.php?search=|eq|
+
+!OFF ==== SEARCH IMDB ====
+    http://www.imdb.com/find?q=|eq|
+
+!OFF ==== BASIC ITALIAN SEARCH ====
+    http://it.wikipedia.org/w/index.php?search=|eq|
+    
+    ; special google query to force searching italian sources
+    ;http://www.google.it/#hl=en&lr=lang_it&q=|eq|
+    
+    ; google multi-search approved italian film sources
+	http://www.google.it/search?hl=en&lr=lang_it&q=|eq|+site:cinematografo.it/pls/cinematografo/consultazione.redirect+OR+site:ComingSoon.it+OR+site:Film.it+OR+site:Movieplayer.it
+
+!OFF ==== IN-DEPTH ITALIAN FILM LOCALIZATION SEARCH ====
+    http://www.comingsoon.it/cerca/?q=|eq|
+    http://www.film.it/search/?q=|eq|
+    http://www.movieplayer.it/ricerca/?q=|eq|
+    http://www.filmtv.it/cerca.php?q=|eq|
+    http://www.mymovies.it/database/ricercalibera/default.asp?q=|eq|&cx=partner-pub-1699801751737986%3Ax7j961-1g3m&cof=FORID%3A9&ie=ISO-8859-1&sa=Cerca 
+    http://www.cinematografo.it/pls/cinematografo/V3_S2EW_SEARCH.risultati?p_frase=|eq|&lingua=italiano&tipo_ricerca=semplice&p_ambito=sito&p_ambito=banca&p_data_aggiornamento=tutti&p_ordine=punteggio
+    http://www.imdb.it/find?q=|eq|
+
+    ; search italian pardolive using google
+    http://www.google.it/#hl=en&q=site:www.pardolive.ch%2Fit%2F+|eq|&lr=lang_it
+
+!OFF ==== MB SEARCH ====
+	http://musicbrainz.org/search?query=|e|&type=artist&method=indexed
+	http://musicbrainz.org/search?query=|e|&type=release&method=indexed
+
+!OFF ==== SEARCH EMAILS ====
+    https://mail.google.com/mail/u/0/#search/|eq|
+
+!OFF ==== SEARCH DISCUSSIONS ====
+    https://groups.google.com/a/teraneuro.com/forum/#!search/|eq|    
+
+!OFF ==== NETFLIX ====
+    ; generally not used
+    ; I can't view netflix, but this is nearly as good:
+    http://www.google.com/search?q=site:dvd.netflix.com+|eq|
+
+!OFF ==== DETAILED NOTES ====
+
+Commands Available:
+    !ON
+    !OFF
+    ;
+    !REGEX
+    ||
+
+What they do:
+
+Any line that begins with a semicolon (;) is disabled.
+    * You can use this to temporarily disable certain urls or write notes.
+Any line that begins with !OFF disables all lines after it.
+    * The next line that begins with !ON re-enables all lines after it.
+    * You can use this to write longer comments, or have toggleable "sections" (such as all this text you're reading now).
+    * These must be UPPERCASE, and any remaining text on that line is ignored.
+Any line like this: !REGEX [regex here] creates a "regex section".
+    * The next line that begins with !REGEX marks the start of the next regex section.
+    * A "regex" (Regular Expression) is a common way to search text for patterns you specify. http://en.wikipedia.org/wiki/Regular_expression
+    * If a section's regex matches, Helpy opens all urls in it.
+    * Once a matching regex section is found, no further sections can be matched.
+Inside of URLs you may place two pipes "||" where you want your text to appear.
+    * Between these pipes you may specify additional options.
+    * Use the "e" option to have your text encoded for safe placement in urls. (recommended for any text that may have spaces)
+    * Use the "q" option to have your text surrounded by quotes. (e.g. for searching exact phrase in google)
+    * Example with both options: |eq| or |qe| (option order does not matter)
+
+Notes
+    * Any spaces/tabs at the beginning/end of each line are ignored.
+    * The "e" and "q" pipe options are great for google searches, for example.
