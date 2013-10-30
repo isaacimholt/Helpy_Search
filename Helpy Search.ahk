@@ -3,7 +3,7 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-#Include Array.ahk
+;#Include Array.ahk
 
 ; todo: handle lists of keys with various separators & more specific mid regex for this as well. also, a gui.
 
@@ -11,7 +11,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 CONFIG_FILE := "config.hlpy"
 DEFAULT_HOTKEY := "^space"
-HOTKEYS := Array()
+;HOTKEYS := Array()
 
 Menu, tray, add, Open Config, open_config
 ; add separator line
@@ -37,7 +37,6 @@ return
 main:
     ; register which hotkey was used so we know which lines to execute
     HOTKEY_USED := A_ThisHotKey
-    msgbox % HOTKEY_USED
     ClipSaved := ClipboardAll   ; Save the entire clipboard
     ; ... here make temporary use of the clipboard
     clipboard =  ; Start off empty to allow ClipWait to detect when the text has arrived.
