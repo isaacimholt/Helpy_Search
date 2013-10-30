@@ -14,24 +14,34 @@ DEFAULT_HOTKEY := "^space"
 ;HOTKEYS := Array()
 
 Menu, tray, add, Open Config, open_config
+Menu, tray, add, Open Readme online, open_readme
 ; add separator line
 Menu, tray, add
 ; place standard tray items under mine
 Menu, tray, NoStandard
 Menu, tray, Standard
 
+IfNotExist, %CONFIG_FILE%
+{
+  FileAppend,
+  (
+; This is the default config file.
+; Customize it to your needs.
+http://www.google.com/search?q=|e|
+http://en.wikipedia.org/w/index.php?search=|e|
+http://www.youtube.com/results?search_query=|e|
+  ), %CONFIG_FILE%
+}
+
 hotkey, %DEFAULT_HOTKEY%, main
-
-return
-
-init_hotkeys:
-    IfExist, %CONFIG_FILE%
-    {
-    }
 return
 
 open_config:
     run notepad %CONFIG_FILE%
+return
+
+open_readme:
+    run http://github.com/miloir/Helpy_Search/#helpy-search
 return
 
 main:

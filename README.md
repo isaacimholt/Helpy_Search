@@ -14,7 +14,7 @@ The `config.hlpy` file configures the program's behavior with a simple language.
 
 ### Configuration Overview
 
-Helpy Search will interpret this file each time you press its activation hotkeys. It consists primarily of regex declarations and a list of urls to be opened if the regex is matched with your text.
+Helpy Search will interpret this file each time you press its activation hotkeys. It consists primarily of urls to be opened, optionally with regex matching.
 
 ### Simplest Example
 
@@ -22,7 +22,7 @@ Helpy Search will interpret this file each time you press its activation hotkeys
 http://www.google.com/search?q=|e|
 ```
 
-This example will simply open a google search for your selection. The pipes with an e (`|e|`) are where our text selection will be inserted. It is mildly useful, but we can do more.
+This example will simply open a google search for your selection. The pipes with an e (`|e|`) are where our text selection will be inserted. This is mildly useful, but we can do more.
 
 ### Multi-Search Example
 
@@ -54,9 +54,11 @@ This example detects if our selection was a url. If it was, it opens it in your 
 
 Inside of pipes (`||`) you may use:
 
-- `e` - Encode text; this makes your text "safe" for insertion into urls.
+- `e` - Encode text; this makes your text "safe" for insertion into urls. Also known as [Percent Encoding](http://en.wikipedia.org/wiki/Percent-encoding).
 - `e-p` - Encode text and turn spaces into plusses (`+`) instead of `%20`. Mostly useless, only serves to make urls slightly prettier.
 - `q` - Add quotes (`" "`) around your text. Useful for "exact matching" of search text.
+
+If you are unsure which to use, you probably want `|e|`.
 
 ### Extra Features
 
