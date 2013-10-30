@@ -4,9 +4,9 @@ Helpy Search is a small Windows utility to enable rapid term search in multiple 
 
 ## Usage
 
-- Make sure Helpy is running; it must be active to capture your input.
-- Select some text in any application.
-- Press `CTRL + Spacebar`. Your text will be inserted into urls you specify and opened in your default browser.
+1. Make sure Helpy is running; it must be active to capture your input.
+2. Select some text in any application.
+3. Press `CTRL + Spacebar`. Your text will be inserted into urls you specify and opened in your default browser.
 
 ## Configuration
 
@@ -117,9 +117,9 @@ These may appear anywhere within a url.
 
 ## How to Adapt to Your Needs
 
-- To use Helpy with a site of your choice, perform a search for anything you like.
-- Copy and paste the url of the search results page into `config.hlpy`.
-- Identify the part where your search term is, and replace it with `|e|`.
+1. To use Helpy with a site of your choice, perform a search for anything you like.
+2. Copy and paste the url of the search results page into `config.hlpy`.
+3. Identify the part where your search term is, and replace it with `|e|`.
 
 ## Troubleshooting
 
