@@ -37,139 +37,135 @@ hotkey, %DEFAULT_HOTKEY%, main
 return
 
 open_config:
-    run notepad %CONFIG_FILE%
+  run notepad %CONFIG_FILE%
 return
 
 open_readme:
-    run http://github.com/miloir/Helpy_Search/#helpy-search
+  run http://github.com/miloir/Helpy_Search/#helpy-search
 return
 
 main:
-    ; register which hotkey was used so we know which lines to execute
-    HOTKEY_USED := A_ThisHotKey
-    ClipSaved := ClipboardAll   ; Save the entire clipboard
-    ; ... here make temporary use of the clipboard
-    clipboard =  ; Start off empty to allow ClipWait to detect when the text has arrived.
-    Send ^c
-    ClipWait  ; Wait for the clipboard to contain text.
+  ; register which hotkey was used so we know which lines to execute
+  HOTKEY_USED := A_ThisHotKey
+  ClipSaved := ClipboardAll   ; Save the entire clipboard
+  ; ... here make temporary use of the clipboard
+  clipboard =  ; Start off empty to allow ClipWait to detect when the text has arrived.
+  Send ^c
+  ClipWait  ; Wait for the clipboard to contain text.
+  
+  ; trim top & tail & rename for clarity
+  selected_text := RegExReplace(clipboard,"^\s*|\s*$","")
     
+  IN_SKIP_SECTION = 0
+  REGEX_STR := ""
+  REGEX_MATCHES = 0
+  
+  Loop, read, %CONFIG_FILE%
+  {
+    ;url_string = %A_LoopReadLine%   ; rename for clarity and autotrim
     ; trim top & tail & rename for clarity
-    selected_text := RegExReplace(clipboard,"^\s*|\s*$","")
+    url_string := RegExReplace(A_LoopReadLine,"^\s*|\s*$","")
     
-    IfExist, %CONFIG_FILE%
-    {
-        
-        IN_SKIP_SECTION = 0
-        REGEX_STR := ""
-        REGEX_MATCHES = 0
-        
-        Loop, read, %CONFIG_FILE%
-        {
-            ;url_string = %A_LoopReadLine%   ; rename for clarity and autotrim
-            ; trim top & tail & rename for clarity
-            url_string := RegExReplace(A_LoopReadLine,"^\s*|\s*$","")
-            
-            ; skip empty lines
-            if not url_string
-                continue
-            
-            ; skip comments
-            if ( RegExMatch(url_string, "^;") )
-                continue
-            
-            ; skip off sections
-            if ( RegExMatch(url_string, "^!OFF") ) {
-                IN_SKIP_SECTION := 1
-                continue               
-            } else if ( RegExMatch(url_string, "^!ON") ) {
-                IN_SKIP_SECTION := 0
-                continue
-            } else if (IN_SKIP_SECTION) {
-                continue
-            }
-            
-            ; register regex section
-            if ( RegExMatch(url_string, "^!REGEX") ) {
-                
-                ; want to exit after finding a matching REGEX block
-                if REGEX_MATCHES
-                    break
-                
-                ; get regex
-                REGEX_STR := SubStr(url_string, 7)
-                ; trim
-                REGEX_STR := RegExReplace(REGEX_STR,"^\s*|\s*$","")
-                
-                if ( RegExMatch(selected_text, REGEX_STR) ) {
-                    REGEX_MATCHES = 1
-                } else {
-                    REGEX_MATCHES = 0
-                }
-                continue
-            }
-            
-            ; do werk
-            if ( REGEX_MATCHES ) {
-                url_string := ParseFlags(url_string, selected_text)
-                Run % url_string
-                sleep, 750 ; need to make sure tabs have time to load
-            }
-            
-        }
+    ; skip empty lines
+    if not url_string
+      continue
+    
+    ; skip comments
+    if ( RegExMatch(url_string, "^;") )
+      continue
+    
+    ; skip off sections
+    if ( RegExMatch(url_string, "^!OFF") ) {
+      IN_SKIP_SECTION := 1
+      continue               
+    } else if ( RegExMatch(url_string, "^!ON") ) {
+      IN_SKIP_SECTION := 0
+      continue
+    } else if (IN_SKIP_SECTION) {
+      continue
     }
     
-    Clipboard := ClipSaved   ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
-    ClipSaved =   ; Free the memory in case the clipboard was very large.
+    ; register regex section
+    if ( RegExMatch(url_string, "^!REGEX") ) {
+      
+      ; want to exit after finding a matching REGEX block
+      if REGEX_MATCHES
+        break
+      
+      ; get regex
+      REGEX_STR := SubStr(url_string, 7)
+      ; trim
+      REGEX_STR := RegExReplace(REGEX_STR,"^\s*|\s*$","")
+      
+      if ( RegExMatch(selected_text, REGEX_STR) ) {
+        REGEX_MATCHES = 1
+      } else {
+        REGEX_MATCHES = 0
+      }
+      continue
+    }
+    
+    ; do werk
+    if ( REGEX_MATCHES ) {
+      url_string := ParseFlags(url_string, selected_text)
+      Run % url_string
+      sleep, 750  ; need to make sure tabs have time to load
+    }
+    
+  }
+  
+  Clipboard := ClipSaved  ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
+  ClipSaved = ; Free the memory in case the clipboard was very large.
 return
 
 ParseFlags(url_string, selected_text)
 {
-    flag_delimiter := "|"
-    is_even := 0
-    search_strings := Array()
-    replace_strings := Array()
+  flag_delimiter := "|"
+  is_even := 0
+  search_strings := Array()
+  replace_strings := Array()
 
-    Loop, parse, url_string, %flag_delimiter%
+  Loop, parse, url_string, %flag_delimiter%
+  {
+    if is_even
     {
-        if is_even
-        {
-            flags := A_LoopField    ; rename for clarity
-            search_var := flag_delimiter . flags . flag_delimiter
-            search_strings.Insert(search_var)
-            result_text := selected_text ; make copy
-            IfInString, flags, e
-            {
-                result_text := UriEncode(result_text)
-            }
-            IfInString, flags, e-p
-            {
-                ; e-p flag is "encode with pluses"
-                ; text will have already been encoded so just do replacement
-                StringReplace, result_text, result_text, `%20, +, All
-            }
-            IfInString, flags, q
-            {
-                result_text := "%22" . result_text . "%22"
-            }
-            
-            replace_strings.Insert(result_text)
-            
-            is_even := 0
-        }
-        else
-        {
-            is_even := 1
-        }
+      flags := A_LoopField    ; rename for clarity
+      search_var := flag_delimiter . flags . flag_delimiter
+      search_strings.Insert(search_var)
+      result_text := selected_text ; make copy
+      IfInString, flags, e
+      {
+        result_text := UriEncode(result_text)
+      }
+      IfInString, flags, e-p
+      {
+        ; e-p flag is "encode with pluses"
+        ; text will have already been encoded so just do replacement
+        StringReplace, result_text, result_text, `%20, +, All
+      }
+      IfInString, flags, q
+      {
+        result_text := "%22" . result_text . "%22"
+      }
+      
+      replace_strings.Insert(result_text)
+      
+      is_even := 0
     }
-    
-    Loop % search_strings.MaxIndex()
+    else
     {
-        search_str := search_strings[A_Index]
-        replace_str := replace_strings[A_Index]
-        StringReplace, url_string, url_string, %search_str%, %replace_str%
+      is_even := 1
     }
-    
-    Return, url_string
+  }
+  
+  Loop % search_strings.MaxIndex()
+  {
+    search_str := search_strings[A_Index]
+    replace_str := replace_strings[A_Index]
+    StringReplace, url_string, url_string, %search_str%, %replace_str%
+  }
+  
+  Return, url_string
 }
 
 ; enc fxns
