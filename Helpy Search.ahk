@@ -3,15 +3,13 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-;#Include Array.ahk
+#Include Array.ahk
 
-; todo: handle lists of keys with various separators & more specific mid regex for this as well. also, a gui.
-
-; remember to install AutoHotkey_L, not the regular ahk
+; requires AutoHotkey_L
 
 CONFIG_FILE := "config.hlpy"
 DEFAULT_HOTKEY := "^space"
-;HOTKEYS := Array()
+HOTKEYS := Array()
 
 Menu, tray, add, Open Config, open_config
 Menu, tray, add, Open Readme online, open_readme
@@ -131,7 +129,7 @@ ParseFlags(url_string, selected_text)
     {
       flags := A_LoopField    ; rename for clarity
       search_var := flag_delimiter . flags . flag_delimiter
-      search_strings.Insert(search_var)
+      search_strings.append(search_var)
       result_text := selected_text ; make copy
       IfInString, flags, e
       {
@@ -148,7 +146,7 @@ ParseFlags(url_string, selected_text)
         result_text := "%22" . result_text . "%22"
       }
       
-      replace_strings.Insert(result_text)
+      replace_strings.append(result_text)
       
       is_even := 0
     }
@@ -158,7 +156,7 @@ ParseFlags(url_string, selected_text)
     }
   }
   
-  Loop % search_strings.MaxIndex()
+  Loop % search_strings.len()
   {
     search_str := search_strings[A_Index]
     replace_str := replace_strings[A_Index]
