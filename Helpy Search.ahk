@@ -12,6 +12,8 @@ DEFAULT_HOTKEY := "^space"
 HOTKEYS := Array()
 
 Menu, tray, add, Open Config, open_config
+Menu, tray, add, Show Active Hotkeys, show_active_hotkeys
+Menu, tray, add, Update Config Hotkeys, update_hotkeys
 Menu, tray, add, Open Readme online, open_readme
 ; add separator line
 Menu, tray, add
@@ -31,8 +33,91 @@ http://www.youtube.com/results?search_query=|e|
   ), %CONFIG_FILE%
 }
 
-hotkey, %DEFAULT_HOTKEY%, main
+scan_hotkeys(0)
+
 return
+
+init_hotkeys:
+  
+return
+
+update_hotkeys:
+  scan_hotkeys()
+return
+
+show_active_hotkeys:
+  msgbox % HOTKEYS.join("`n")
+return
+
+scan_hotkeys(tray_tip=1)
+{
+  global CONFIG_FILE
+  global HOTKEYS
+  global DEFAULT_HOTKEY
+  
+  TEMP_HOTKEYS := Array() ; init / reset
+  
+  Loop, read, %CONFIG_FILE%
+  {
+    config_line := RegExReplace(A_LoopReadLine,"^\s*|\s*$","") ; trim & rename
+    ; register hotkey section
+    if ( RegExMatch(config_line, "^!HOTKEY") ) {
+      ; get hotkey
+      HOTKEY_STR := SubStr(config_line, 8)
+      ; trim
+      HOTKEY_STR := RegExReplace(HOTKEY_STR,"^\s*|\s*$","")
+      ; Check str is not empty and doesn't already exist in TEMP_HOTKEYS
+      if ( HOTKEY_STR and not TEMP_HOTKEYS.indexOf(HOTKEY_STR) )
+        TEMP_HOTKEYS.append(HOTKEY_STR)
+    }
+  }
+  
+  ; add default hk if no others
+  if not TEMP_HOTKEYS.len()
+    TEMP_HOTKEYS.append(DEFAULT_HOTKEY)
+  
+  HK_REMOVED := 0
+  HK_ADDED :=   0
+  
+  ; disable old hotkeys
+  for index, hk in HOTKEYS
+  {
+    if not TEMP_HOTKEYS.indexOf(hk)
+    {
+      hotkey, %hk%, main, Off
+      HK_REMOVED++
+    }
+  }
+  
+  ; enable new hotkeys
+  for index, hk in TEMP_HOTKEYS
+  {
+    if not HOTKEYS.indexOf(hk)
+    {
+      hotkey, %hk%, main, On
+      HK_ADDED++
+    }
+  }
+  
+  ; set HOTKEYS to new values
+  HOTKEYS := TEMP_HOTKEYS
+  
+  if not tray_tip
+    return
+  
+  ; notify user of changed hotkeys
+  if ( HK_ADDED or HK_REMOVED )
+  {
+    bubble_text := ""
+    if HK_ADDED
+      bubble_text := bubble_text . HK_ADDED . " hotkey(s) added."
+    if HK_ADDED and HK_REMOVED
+      bubble_text := bubble_text . "`n"
+    if HK_REMOVED
+      bubble_text := bubble_text . HK_REMOVED . " hotkey(s) removed."
+    TrayTip, Hotkeys Updated, %bubble_text%, , 1
+  }
+}
 
 open_config:
   run notepad %CONFIG_FILE%
@@ -43,55 +128,80 @@ open_readme:
 return
 
 main:
-  ; register which hotkey was used so we know which lines to execute
-  HOTKEY_USED := A_ThisHotKey
-  ClipSaved := ClipboardAll   ; Save the entire clipboard
+  
+  scan_hotkeys()
+  
+  ; init  
+  IN_SKIP_SECTION :=  0
+  HOTKEY_USED :=      A_ThisHotKey
+  HOTKEY_EXISTS :=    0 ; remains false if config doesn't have any !HOTKEY cmds
+  HOTKEY_STR :=       ""
+  HOTKEY_MATCHES :=   0
+  REGEX_EXISTS :=     0 ; remains false if config doesn't have any !REGEX cmds
+  REGEX_STR :=        ""
+  REGEX_MATCHES :=    0
+  
+  ; Save the entire clipboard
+  ClipSaved := ClipboardAll
   ; ... here make temporary use of the clipboard
-  clipboard =  ; Start off empty to allow ClipWait to detect when the text has arrived.
+  clipboard = ; Start off empty to allow ClipWait to detect when the text has arrived.
   Send ^c
   ClipWait  ; Wait for the clipboard to contain text.
   
-  ; trim top & tail & rename for clarity
-  selected_text := RegExReplace(clipboard,"^\s*|\s*$","")
-    
-  IN_SKIP_SECTION = 0
-  REGEX_STR := ""
-  REGEX_MATCHES = 0
+  selected_text := RegExReplace(clipboard,"^\s*|\s*$","") ; trim & rename
   
   Loop, read, %CONFIG_FILE%
   {
-    ;url_string = %A_LoopReadLine%   ; rename for clarity and autotrim
-    ; trim top & tail & rename for clarity
-    url_string := RegExReplace(A_LoopReadLine,"^\s*|\s*$","")
+    config_line := RegExReplace(A_LoopReadLine,"^\s*|\s*$","") ; trim & rename
     
     ; skip empty lines
-    if not url_string
+    if not config_line
       continue
     
     ; skip comments
-    if ( RegExMatch(url_string, "^;") )
+    if ( RegExMatch(config_line, "^;") )
       continue
     
     ; skip off sections
-    if ( RegExMatch(url_string, "^!OFF") ) {
+    if ( RegExMatch(config_line, "^!OFF") ) {
       IN_SKIP_SECTION := 1
       continue               
-    } else if ( RegExMatch(url_string, "^!ON") ) {
+    } else if ( RegExMatch(config_line, "^!ON") ) {
       IN_SKIP_SECTION := 0
       continue
     } else if (IN_SKIP_SECTION) {
       continue
     }
     
+    ; register hotkey section
+    if ( RegExMatch(config_line, "^!HOTKEY") ) {
+      
+      HOTKEY_EXISTS = 1
+      
+      ; get hotkey
+      HOTKEY_STR := SubStr(config_line, 8)
+      ; trim
+      HOTKEY_STR := RegExReplace(HOTKEY_STR,"^\s*|\s*$","")
+      msgbox % HOTKEY_STR . " " . HOTKEY_USED
+      if ( HOTKEY_STR = HOTKEY_USED ) {
+        HOTKEY_MATCHES = 1
+      } else {
+        HOTKEY_MATCHES = 0
+      }
+      continue
+    }
+    
     ; register regex section
-    if ( RegExMatch(url_string, "^!REGEX") ) {
+    if ( HOTKEY_MATCHES and RegExMatch(config_line, "^!REGEX") ) {
+      
+      REGEX_EXISTS = 1
       
       ; want to exit after finding a matching REGEX block
       if REGEX_MATCHES
         break
       
       ; get regex
-      REGEX_STR := SubStr(url_string, 7)
+      REGEX_STR := SubStr(config_line, 7)
       ; trim
       REGEX_STR := RegExReplace(REGEX_STR,"^\s*|\s*$","")
       
@@ -102,11 +212,14 @@ main:
       }
       continue
     }
-    
+    ; msgbox % HOTKEY_MATCHES . " " . HOTKEY_EXISTS
+    ; msgbox % REGEX_MATCHES . " " . REGEX_EXISTS
     ; do werk
-    if ( REGEX_MATCHES ) {
-      url_string := ParseFlags(url_string, selected_text)
-      Run % url_string
+    if ( (HOTKEY_MATCHES or not HOTKEY_EXISTS) 
+      and (REGEX_MATCHES or not REGEX_EXISTS) ) {
+      
+      config_line := ParseFlags(config_line, selected_text)
+      Run % config_line
       sleep, 750  ; need to make sure tabs have time to load
     }
     
@@ -116,14 +229,14 @@ main:
   ClipSaved = ; Free the memory in case the clipboard was very large.
 return
 
-ParseFlags(url_string, selected_text)
+ParseFlags(config_line, selected_text)
 {
   flag_delimiter := "|"
   is_even := 0
   search_strings := Array()
   replace_strings := Array()
 
-  Loop, parse, url_string, %flag_delimiter%
+  Loop, parse, config_line, %flag_delimiter%
   {
     if is_even
     {
@@ -160,10 +273,10 @@ ParseFlags(url_string, selected_text)
   {
     search_str := search_strings[A_Index]
     replace_str := replace_strings[A_Index]
-    StringReplace, url_string, url_string, %search_str%, %replace_str%
+    StringReplace, config_line, config_line, %search_str%, %replace_str%
   }
   
-  Return, url_string
+  Return, config_line
 }
 
 ; enc fxns
