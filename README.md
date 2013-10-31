@@ -142,7 +142,7 @@ These may appear anywhere within a url.
 
 ## Troubleshooting
 
-- If Helpy seems to stop responding (as it may do rarely), simply exit and start it again.
+- If Helpy seems to stop responding, simply exit and start it again.
 - Check that the hotkey you are pressing is actually registered with Helpy by clicking "Show active hotkeys" in the tray menu.
 - You may have written your config incorrectly. Check that you haven't, for instance, put a more specific regex after a generic one.
 - If your config is large and messy, try using "Show config data" from the tray menu. This shows you the simplified version of the config that is actually loaded in memory. It strips out any comments and `!OFF` sections.
