@@ -1,25 +1,19 @@
+﻿; requires AutoHotkey_L
+
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ;#Warn  ; Recommended for catching common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
+#Include OrderedArray.ahk ; http://www.autohotkey.com/board/topic/94043-ordered-array/
 #Include Array.ahk
 
-; requires AutoHotkey_L
+; ==== GLOBALS ==== 
 
-CONFIG_FILE := "config.hlpy"
-DEFAULT_HOTKEY := "^space"
-HOTKEYS := Array()
+CONFIG_FILE := "Helpy Config.txt"
 
-Menu, tray, add, Open Config, open_config
-Menu, tray, add, Show Active Hotkeys, show_active_hotkeys
-Menu, tray, add, Reload Hotkeys from Config, update_hotkeys
-Menu, tray, add, Open Readme online, open_readme
-; add separator line
-Menu, tray, add
-; place standard tray items under mine
-Menu, tray, NoStandard
-Menu, tray, Standard
+
+; ==== INIT ==== 
 
 IfNotExist, %CONFIG_FILE%
 {
@@ -33,117 +27,99 @@ http://www.youtube.com/results?search_query=|e|
   ), %CONFIG_FILE%
 }
 
-scan_hotkeys(0)
+CONFIG_DATA := ParseConfig(CONFIG_FILE)
+For HOTKEY_STR, _ in CONFIG_DATA
+  hotkey, %HOTKEY_STR%, execute, On
+
+; ==== INTERFACE ==== 
+
+Menu, tray, add, Open config, open_config
+Menu, tray, add, View online readme, open_readme
+; add separator line
+Menu, tray, add
+Menu, tray, add, Show config data, view_config_data
+Menu, tray, add, Show active hotkeys, show_active_hotkeys
+Menu, tray, add, Reload config, reload_config
+; add separator line
+Menu, tray, add
+; place standard tray items under mine
+Menu, tray, NoStandard
+Menu, tray, Standard
 
 return
-
-update_hotkeys:
-  scan_hotkeys()
-return
-
-show_active_hotkeys:
-  msgbox % HOTKEYS.join("`n")
-return
-
-scan_hotkeys(tray_tip=1)
-{
-  global CONFIG_FILE
-  global HOTKEYS
-  global DEFAULT_HOTKEY
-  
-  TEMP_HOTKEYS := Array() ; init / reset
-  
-  Loop, read, %CONFIG_FILE%
-  {
-    config_line := RegExReplace(A_LoopReadLine,"^\s*|\s*$","") ; trim & rename
-    ; register hotkey section
-    if ( RegExMatch(config_line, "^!HOTKEY") ) {
-      ; get hotkey
-      HOTKEY_STR := SubStr(config_line, 8)
-      ; trim
-      HOTKEY_STR := RegExReplace(HOTKEY_STR,"^\s*|\s*$","")
-      ; Check str is not empty and doesn't already exist in TEMP_HOTKEYS
-      if ( HOTKEY_STR and not TEMP_HOTKEYS.indexOf(HOTKEY_STR) )
-        TEMP_HOTKEYS.append(HOTKEY_STR)
-    } else if ( not TEMP_HOTKEYS.len()
-      and config_line
-      and not RegExMatch(config_line, "^;")
-      and not RegExMatch(config_line, "^!OFF")
-      and not RegExMatch(config_line, "^!ON")
-      and not RegExMatch(config_line, "^!REGEX")
-      and not ) {
-      
-    }
-  }
-  
-  ; add default hk if no others
-  if not TEMP_HOTKEYS.len()
-    TEMP_HOTKEYS.append(DEFAULT_HOTKEY)
-  
-  HK_REMOVED := 0
-  HK_ADDED :=   0
-  
-  ; disable old hotkeys
-  for index, hk in HOTKEYS
-  {
-    if not TEMP_HOTKEYS.indexOf(hk)
-    {
-      hotkey, %hk%, main, Off
-      HK_REMOVED++
-    }
-  }
-  
-  ; enable new hotkeys
-  for index, hk in TEMP_HOTKEYS
-  {
-    if not HOTKEYS.indexOf(hk)
-    {
-      hotkey, %hk%, main, On
-      HK_ADDED++
-    }
-  }
-  
-  ; set HOTKEYS to new values
-  HOTKEYS := TEMP_HOTKEYS
-  
-  if not tray_tip
-    return
-  
-  ; notify user of changed hotkeys
-  if ( HK_ADDED or HK_REMOVED )
-  {
-    bubble_text := ""
-    if HK_ADDED
-      bubble_text := bubble_text . HK_ADDED . " hotkey(s) added."
-    if HK_ADDED and HK_REMOVED
-      bubble_text := bubble_text . "`n"
-    if HK_REMOVED
-      bubble_text := bubble_text . HK_REMOVED . " hotkey(s) removed."
-    TrayTip, Hotkeys Updated, %bubble_text%, , 1
-  }
-}
 
 open_config:
-  run notepad %CONFIG_FILE%
+  gosub reload_config
+  run %CONFIG_FILE%
 return
 
 open_readme:
   run http://github.com/miloir/Helpy_Search/#helpy-search
 return
 
-main:
+view_config_data:
+  gosub reload_config
+  msgbox % DumpData(CONFIG_DATA)
+return
+
+show_active_hotkeys:
+  gosub reload_config
+  msg_str := ""
+  for hk, _ in CONFIG_DATA
+    msg_str .= hk . "`n"
+  msgbox % msg_str
+return
+
+reload_config:
+  HK_REMOVED := Array()
+  HK_ADDED :=   Array()
+  NEW_CONFIG_DATA :=   ParseConfig(CONFIG_FILE)
   
-  scan_hotkeys()
+  ; disable old hotkeys
+  for hk, _ in CONFIG_DATA
+  {
+    if not NEW_CONFIG_DATA.HasKey(hk)
+    {
+      hotkey, %hk%, execute, Off
+      HK_REMOVED.append(hk)
+    }
+  }
   
-  ; init  
-  IN_SKIP_SECTION :=  0
-  HOTKEY_USED :=      A_ThisHotKey
-  HOTKEY_EXISTS :=    0 ; remains false if config doesn't have any !HOTKEY cmds
-  HOTKEY_STR :=       ""
-  HOTKEY_MATCHES :=   0
-  REGEX_EXISTS :=     0 ; remains false if config doesn't have any !REGEX cmds
-  REGEX_STR :=        ""
-  REGEX_MATCHES :=    0
+  ; enable new hotkeys
+  for hk, _ in NEW_CONFIG_DATA
+  {
+    if not CONFIG_DATA.HasKey(hk)
+    {
+      hotkey, %hk%, execute, On
+      HK_ADDED.append(hk)
+    }
+  }
+  
+  ; update data
+  CONFIG_DATA := NEW_CONFIG_DATA
+  
+  ; notify user of changed hotkeys
+  if ( HK_ADDED.len() or HK_REMOVED.len() )
+  {
+    bubble_text := ""
+    if HK_ADDED.len()
+      bubble_text .= HK_ADDED.len() . " hotkey(s) added: " . HK_ADDED.join(", ")
+    if HK_ADDED.len() and HK_REMOVED.len()
+      bubble_text .= "`n"
+    if HK_REMOVED.len()
+      bubble_text .= HK_REMOVED.len() . " hotkey(s) removed: " . HK_REMOVED.join(", ")
+    TrayTip, Hotkeys Updated, %bubble_text%, , 1
+  }
+
+return
+
+
+; ==== MAIN ==== 
+
+execute:
+  gosub reload_config
+  
+  HOTKEY_USED := A_ThisHotKey
   
   ; Save the entire clipboard
   ClipSaved := ClipboardAll
@@ -152,86 +128,96 @@ main:
   Send ^c
   ClipWait  ; Wait for the clipboard to contain text.
   
-  selected_text := RegExReplace(clipboard,"^\s*|\s*$","") ; trim & rename
+  selected_text := trim(clipboard)
   
-  Loop, read, %CONFIG_FILE%
+  Clipboard := ClipSaved  ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
+  ClipSaved = ; Free the memory in case the clipboard was very large.
+  
+  For REGEX_STR, URLS in CONFIG_DATA[HOTKEY_USED] 
   {
-    config_line := RegExReplace(A_LoopReadLine,"^\s*|\s*$","") ; trim & rename
+    if ( RegExMatch(selected_text, REGEX_STR) ){
+      For _, URL in URLS
+      {
+        Run % ParseFlags(URL, selected_text)
+        sleep, 750  ; need to make sure tabs have time to load
+      }
+      break ; want to exit after finding a match
+    }
+  }
+  
+return
+
+
+; ==== PARSERS ==== 
+
+ParseConfig(config_filename, default_hotkey="^space")
+{
+  
+  ; init with some defaults, will be stripped later if unused
+  ;temp_data := OrderedArray(default_hotkey, OrderedArray("", OrderedArray()) )
+  temp_data := OrderedArray()
+  
+  IN_SKIP_SECTION := 0
+  CURRENT_HOTKEY := default_hotkey
+  CURRENT_REGEX := ""
+  
+  Loop, read, %config_filename%
+  {
     
-    ; skip empty lines
-    if not config_line
+    tokens := ConfigTokenizer(A_LoopReadLine)
+    
+    if ( tokens[1] = "blank" or tokens[1] = "comment" ) {
       continue
-    
-    ; skip comments
-    if ( RegExMatch(config_line, "^;") )
-      continue
-    
-    ; skip off sections
-    if ( RegExMatch(config_line, "^!OFF") ) {
+    } else if ( tokens[1] = "off" ) {
       IN_SKIP_SECTION := 1
-      continue               
-    } else if ( RegExMatch(config_line, "^!ON") ) {
+    } else if ( tokens[1] = "on" ) {
       IN_SKIP_SECTION := 0
+    } else if ( IN_SKIP_SECTION ) {
       continue
-    } else if (IN_SKIP_SECTION) {
-      continue
-    }
-    
-    ; register hotkey section
-    if ( RegExMatch(config_line, "^!HOTKEY") ) {
-      
-      HOTKEY_EXISTS = 1
-      
-      ; get hotkey
-      HOTKEY_STR := SubStr(config_line, 8)
-      ; trim
-      HOTKEY_STR := RegExReplace(HOTKEY_STR,"^\s*|\s*$","")
-      ;msgbox % HOTKEY_STR . " " . HOTKEY_USED
-      if ( HOTKEY_STR = HOTKEY_USED ) {
-        HOTKEY_MATCHES = 1
-      } else {
-        HOTKEY_MATCHES = 0
-      }
-      continue
-    }
-    
-    ; register regex section
-    if ( HOTKEY_MATCHES or not HOTKEY_EXISTS and RegExMatch(config_line, "^!REGEX") ) {
-      
-      REGEX_EXISTS = 1
-      
-      ; want to exit after finding a matching REGEX block
-      if REGEX_MATCHES
-        break
-      
-      ; get regex
-      REGEX_STR := SubStr(config_line, 7)
-      ; trim
-      REGEX_STR := RegExReplace(REGEX_STR,"^\s*|\s*$","")
-      
-      if ( RegExMatch(selected_text, REGEX_STR) ) {
-        REGEX_MATCHES = 1
-      } else {
-        REGEX_MATCHES = 0
-      }
-      continue
-    }
-    ; msgbox % HOTKEY_MATCHES . " " . HOTKEY_EXISTS
-    ; msgbox % REGEX_MATCHES . " " . REGEX_EXISTS
-    ; do werk
-    if ( (HOTKEY_MATCHES or not HOTKEY_EXISTS) 
-      and (REGEX_MATCHES or not REGEX_EXISTS) ) {
-      
-      config_line := ParseFlags(config_line, selected_text)
-      Run % config_line
-      sleep, 750  ; need to make sure tabs have time to load
+    } else if ( tokens[1] = "hotkey" ) {
+      CURRENT_HOTKEY := tokens[2]
+      CURRENT_REGEX := "" ; reset regex
+    } else if ( tokens[1] = "regex" ) {
+      CURRENT_REGEX := tokens[2]
+    } else if ( tokens[1] = "url" ) {
+      if not temp_data.HasKey( CURRENT_HOTKEY )
+        temp_data.Insert( CURRENT_HOTKEY, OrderedArray() )
+      if not temp_data[CURRENT_HOTKEY].HasKey( CURRENT_REGEX )
+        temp_data[CURRENT_HOTKEY].Insert( CURRENT_REGEX, Object() )
+      temp_data[CURRENT_HOTKEY][CURRENT_REGEX].Insert( tokens[2] )
     }
     
   }
   
-  Clipboard := ClipSaved  ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
-  ClipSaved = ; Free the memory in case the clipboard was very large.
-return
+  ; todo: clean out temp_data of hotkeys and regexes with no urls
+  ; also empty ("") hotkeys
+  
+  return temp_data
+}
+
+ConfigTokenizer(line)
+{
+  line := trim( line )
+  if ( not line ) {
+    return ["blank", ""]
+  } else if ( RegExMatch(line, "^;") ) {
+    return ["comment", ""]
+  } else if ( RegExMatch(line, "^!OFF") ) {
+    return ["off", ""]
+  } else if ( RegExMatch(line, "^!ON") ) {
+    return ["on", ""]
+  } else if ( RegExMatch(line, "^!HOTKEY") ) {
+    hotkey_str := trim( SubStr(line, 8) )
+    if not hotkey_str
+      return ["blank", ""]
+    return ["hotkey", hotkey_str]
+  } else if ( RegExMatch(line, "^!REGEX") ) {
+    regex_str := trim( SubStr(line, 7) )
+    return ["regex", regex_str]
+  } else {
+    return ["url", line]
+  }
+}
 
 ParseFlags(config_line, selected_text)
 {
@@ -281,6 +267,43 @@ ParseFlags(config_line, selected_text)
   }
   
   Return, config_line
+}
+
+
+; ==== FXNS ==== 
+
+DumpData(data)
+{
+  data_str := ""
+  for hk, regex_data in data
+  {
+    data_str .= "!HOTKEY " . hk . "`n"
+    for regex_str, urls in regex_data
+    {
+      data_str .= "  !REGEX " . regex_str . "`n"
+      for _, url in urls
+      {
+        data_str .= "    " . url . "`n"
+      }
+    }
+  }
+  
+  return data_str
+}
+
+trim(item)
+{
+  return RegExReplace(item,"^\s*|\s*$","")
+}
+
+find(item, arr)
+{
+  for i,j in arr
+  {
+    if ( j = item )
+      return i
+  }
+  return 0
 }
 
 ; enc fxns
