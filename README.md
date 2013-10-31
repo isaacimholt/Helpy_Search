@@ -103,8 +103,6 @@ If you are unsure which to use, you probably want `|e|`.
 
 !ON ==== ALL OTHER CASES ====
 !HOTKEY ^space
-  
-  !REGEX
 
   !OFF ==== GENERAL SEARCH ====
     
@@ -161,7 +159,6 @@ These may appear anywhere within a url.
 http://||
 
 ; open windows files (from: http://stackoverflow.com/a/6416209)
-; !REGEX ^(?:[a-zA-Z]\:|\\\\[\w\.]+\\[\w.$]+)\\(?:[\w]+\\)*\w([\w.])+$
 !REGEX .*\\([^\\]+$)
 ||
 
