@@ -1,6 +1,6 @@
 # Helpy Search
 
-Helpy Search is a small Windows utility to enable rapid term search in multiple websites. Simply put, it opens multiple browser tabs after you select some text and press a hotkey.
+Helpy Search is a small Windows utility to enable rapid term search in multiple websites. Simply put, it opens multiple browser tabs after you select some text and press a hotkey. It is fully customizable.
 
 ## Usage
 
@@ -10,11 +10,11 @@ Helpy Search is a small Windows utility to enable rapid term search in multiple 
 
 ## Configuration
 
-The `config.hlpy` file configures the program's behavior with a simple language. You can open this file with notepad.
+The `Helpy Config.txt` file configures the program's behavior with a simple language. You can open this file with notepad.
 
 ### Configuration Overview
 
-Helpy Search will interpret this file each time you press its activation hotkeys. It consists primarily of urls to be opened, optionally with regex matching.
+Helpy Search will interpret this file each time you press its activation hotkeys. It consists primarily of urls to be opened, optionally with regex matching and custom hotkeys.
 
 ### Simplest Example
 
@@ -33,6 +33,19 @@ http://www.youtube.com/results?search_query=|e|
 ```
 
 This example will open 3 separate tabs simultaneously showing search results for your selection. This can already be quite sufficient for many. You may add as many urls as you like, but remember to add `|e|` where the site would expect your search terms.
+
+### Custom Hotkey Example
+
+```
+http://www.google.com/search?q=|e|
+http://en.wikipedia.org/w/index.php?search=|e|
+http://www.youtube.com/results?search_query=|e|
+
+!HOTKEY #space
+https://twitter.com/search?q=|e|
+```
+
+This is the same as the previous example, but it has an added custom hotkey `ALT + Spacebar` (`#space`), which opens twitter with our search. `!HOTKEY` will change the hotkey used for all urls that follow it, until another `!HOTKEY` command is used. The hotkeys you may use are the same that AutoHotkey allows: read more [here](http://www.autohotkey.com/docs/Hotkeys.htm) (you won't need the 2 colons (`::`) in their examples.
 
 ### Regex Example
 
@@ -71,6 +84,7 @@ If you are unsure which to use, you probably want `|e|`.
 
 ```
 !ON ==== SPECIAL CASES ====
+!HOTKEY ^!s
   
   ; open urls (taken from: http://gist.github.com/823381)
   !REGEX ^(https?://|www\.)[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?$
@@ -85,6 +99,7 @@ If you are unsure which to use, you probably want `|e|`.
   ||
 
 !ON ==== ALL OTHER CASES ====
+!HOTKEY ^space
   
   !REGEX
 
@@ -109,7 +124,8 @@ These commands must be used once per line at its beginning.
 
 - `!ON` - Enables everything after it, until an `!OFF` is encountered. May have any text to its right as a comment if you wish.
 - `!OFF` - Disables everything after it, until an `!ON` is encountered. May have any text to its right as a comment if you wish.
-- `!REGEX` - Activates all urls after it if the regex is a match, until another `!REGEX` is encountered. Write the regex to its right.
+- `!HOTKEY` - Activates all urls after it when the hotkey is pressed. The `!HOTKEY` section ends when another `!HOTKEY` is found in the config file. Write the hotkey to its right.
+- `!REGEX` - Activates all urls after it if the regex is a match. The `!REGEX` section ends when another `!REGEX` or `!HOTKEY` is found in the config file. Write the regex to its right.
 - `;` - Disables this line. Write anything you wish to its right.
 
 These may appear anywhere within a url.
@@ -120,9 +136,12 @@ These may appear anywhere within a url.
 ## How to Adapt to Your Needs
 
 1. To use Helpy with a site of your choice, perform a search for anything you like.
-2. Copy and paste the url of the search results page into `config.hlpy`.
+2. Copy and paste the url of the search results page into `Helpy Config.txt`.
 3. Identify the part where your search term is, and replace it with `|e|`.
 
 ## Troubleshooting
 
-If Helpy seems to stop responding (as it may do rarely), simply exit and start it again.
+- If Helpy seems to stop responding (as it may do rarely), simply exit and start it again.
+- Check that the hotkey you are pressing is actually registered with Helpy by clicking "Show active hotkeys" in the tray menu.
+- You may have written your config incorrectly. Check that you haven't, for instance, put a more specific regex after a generic one.
+- If your config is large and messy, try using "Show config data" from the tray menu. This shows you the simplified version of the config that is actually loaded in memory. It strips out any comments and `!OFF` sections.
