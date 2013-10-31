@@ -27,15 +27,19 @@ http://www.youtube.com/results?search_query=|e|
   ), %CONFIG_FILE%
 }
 
-DATA := ParseConfig(CONFIG_FILE)
-For HOTKEY_STR, _ in DATA
+CONFIG_DATA := ParseConfig(CONFIG_FILE)
+For HOTKEY_STR, _ in CONFIG_DATA
   hotkey, %HOTKEY_STR%, execute, On
 
 ; ==== INTERFACE ==== 
 
-Menu, tray, add, Open Config, open_config
-Menu, tray, add, Open Readme online, open_readme
-Menu, tray, add, View Config Data, view_config_data
+Menu, tray, add, Open config, open_config
+Menu, tray, add, View online readme, open_readme
+; add separator line
+Menu, tray, add
+Menu, tray, add, View config data, view_config_data
+Menu, tray, add, Show active hotkeys, show_active_hotkeys
+Menu, tray, add, Reload config, reload_config
 ; add separator line
 Menu, tray, add
 ; place standard tray items under mine
@@ -45,6 +49,7 @@ Menu, tray, Standard
 return
 
 open_config:
+  gosub reload_config
   run %CONFIG_FILE%
 return
 
@@ -53,14 +58,66 @@ open_readme:
 return
 
 view_config_data:
-  msgbox % DumpData(DATA)
+  gosub reload_config
+  msgbox % DumpData(CONFIG_DATA)
+return
+
+show_active_hotkeys:
+  gosub reload_config
+  msg_str := ""
+  for hk, _ in CONFIG_DATA
+    msg_str .= hk . "`n"
+  msgbox % msg_str
+return
+
+reload_config:
+  HK_REMOVED := Array()
+  HK_ADDED :=   Array()
+  NEW_CONFIG_DATA :=   ParseConfig(CONFIG_FILE)
+  
+  ; disable old hotkeys
+  for hk, _ in CONFIG_DATA
+  {
+    if not NEW_CONFIG_DATA.HasKey(hk)
+    {
+      hotkey, %hk%, execute, Off
+      HK_REMOVED.append(hk)
+    }
+  }
+  
+  ; enable new hotkeys
+  for hk, _ in NEW_CONFIG_DATA
+  {
+    if not CONFIG_DATA.HasKey(hk)
+    {
+      hotkey, %hk%, execute, On
+      HK_ADDED.append(hk)
+    }
+  }
+  
+  ; update data
+  CONFIG_DATA := NEW_CONFIG_DATA
+  
+  ; notify user of changed hotkeys
+  if ( HK_ADDED.len() or HK_REMOVED.len() )
+  {
+    bubble_text := ""
+    if HK_ADDED.len()
+      bubble_text .= HK_ADDED.len() . " hotkey(s) added: " . HK_ADDED.join(", ")
+    if HK_ADDED.len() and HK_REMOVED.len()
+      bubble_text .= "`n"
+    if HK_REMOVED.len()
+      bubble_text .= HK_REMOVED.len() . " hotkey(s) removed: " . HK_REMOVED.join(", ")
+    TrayTip, Hotkeys Updated, %bubble_text%, , 1
+  }
+
 return
 
 
 ; ==== MAIN ==== 
 
 execute:
-  ; todo: parse config again if recently modified
+  gosub reload_config
   
   HOTKEY_USED := A_ThisHotKey
   
@@ -76,7 +133,7 @@ execute:
   Clipboard := ClipSaved  ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
   ClipSaved = ; Free the memory in case the clipboard was very large.
   
-  For REGEX_STR, URLS in DATA[HOTKEY_USED] 
+  For REGEX_STR, URLS in CONFIG_DATA[HOTKEY_USED] 
   {
     if ( RegExMatch(selected_text, REGEX_STR) ){
       For _, URL in URLS
@@ -140,7 +197,7 @@ ParseConfig(config_filename, default_hotkey="^space")
 
 ConfigTokenizer(line)
 {
-  line := trim(line)
+  line := trim( line )
   if ( not line ) {
     return ["blank", ""]
   } else if ( RegExMatch(line, "^;") ) {
@@ -151,6 +208,8 @@ ConfigTokenizer(line)
     return ["on", ""]
   } else if ( RegExMatch(line, "^!HOTKEY") ) {
     hotkey_str := trim( SubStr(line, 8) )
+    if not hotkey_str
+      return ["blank", ""]
     return ["hotkey", hotkey_str]
   } else if ( RegExMatch(line, "^!REGEX") ) {
     regex_str := trim( SubStr(line, 7) )
@@ -235,6 +294,16 @@ DumpData(data)
 trim(item)
 {
   return RegExReplace(item,"^\s*|\s*$","")
+}
+
+find(item, arr)
+{
+  for i,j in arr
+  {
+    if ( j = item )
+      return i
+  }
+  return 0
 }
 
 ; enc fxns
