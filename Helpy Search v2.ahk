@@ -5,7 +5,7 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-#Include OrderedArray.ahk
+#Include OrderedArray.ahk ; http://www.autohotkey.com/board/topic/94043-ordered-array/
 #Include Array.ahk
 
 ; ==== GLOBALS ==== 
@@ -30,12 +30,12 @@ http://www.youtube.com/results?search_query=|e|
 DATA := ParseConfig(CONFIG_FILE)
 For HOTKEY_STR, _ in DATA
   hotkey, %HOTKEY_STR%, execute, On
-msgbox % DumpData(DATA)
 
 ; ==== INTERFACE ==== 
 
 Menu, tray, add, Open Config, open_config
 Menu, tray, add, Open Readme online, open_readme
+Menu, tray, add, View Config Data, view_config_data
 ; add separator line
 Menu, tray, add
 ; place standard tray items under mine
@@ -50,6 +50,10 @@ return
 
 open_readme:
   run http://github.com/miloir/Helpy_Search/#helpy-search
+return
+
+view_config_data:
+  msgbox % DumpData(DATA)
 return
 
 
@@ -214,13 +218,13 @@ DumpData(data)
   data_str := ""
   for hk, regex_data in data
   {
-    data_str := data_str . "!HOTKEY " . hk . "`n"
+    data_str .= "!HOTKEY " . hk . "`n"
     for regex_str, urls in regex_data
     {
-      data_str := data_str . "!REGEX " . regex_str . "`n"
+      data_str .= "  !REGEX " . regex_str . "`n"
       for _, url in urls
       {
-        data_str := data_str . url . "`n"
+        data_str .= "    " . url . "`n"
       }
     }
   }
