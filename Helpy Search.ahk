@@ -37,9 +37,9 @@ Menu, tray, add, Open config, open_config
 Menu, tray, add, View online readme, open_readme
 ; add separator line
 Menu, tray, add
+Menu, tray, add, Reload config, reload_config
 Menu, tray, add, Show config data, view_config_data
 Menu, tray, add, Show active hotkeys, show_active_hotkeys
-Menu, tray, add, Reload config, reload_config
 ; add separator line
 Menu, tray, add
 ; place standard tray items under mine

@@ -1,6 +1,6 @@
 # Helpy Search
 
-Helpy Search is a small Windows utility to enable rapid term search in multiple websites. Simply put, it opens multiple browser tabs after you select some text and press a hotkey. It is fully customizable.
+Helpy Search is a small Windows utility to enable rapid term search in multiple websites. Simply put, it opens multiple browser tabs after you select some text and press a hotkey.
 
 ## Usage
 
@@ -10,11 +10,11 @@ Helpy Search is a small Windows utility to enable rapid term search in multiple 
 
 ## Configuration
 
-The `Helpy Config.txt` file configures the program's behavior with a simple language. You can open this file with notepad.
+The `Helpy Config.txt` file configures what urls will be opened. The program's behavior can be customized with some simple commands.
 
 ### Configuration Overview
 
-Helpy Search will interpret this file each time you press its activation hotkeys. It consists primarily of urls to be opened, optionally with regex matching and custom hotkeys.
+Helpy Search will interpret this file each time you press its activation hotkeys. It consists of urls to be opened, optionally with regex matching and custom hotkeys.
 
 ### Simplest Example
 
@@ -48,7 +48,7 @@ https://twitter.com/search?q=|e|
 https://plus.google.com/s/|e|
 ```
 
-This is the same as the previous example, but it adds 2 custom hotkeys `CTRL + ALT + Spacebar` (`^!space`), which opens twitter with our search, and `CTRL + Enter` (`^enter`) which opens Google Plus. `!HOTKEY` will change the hotkey used for all urls that appear after it. You can create more hotkeys to open different urls. The hotkeys you may use are the same that AutoHotkey allows: read more [here](http://www.autohotkey.com/docs/Hotkeys.htm) (you won't need the 2 colons (`::`) in their examples.)
+This is the same as the previous example, but it adds 2 custom hotkeys `CTRL + ALT + Spacebar` (`^!space`), which opens twitter with our search, and `CTRL + Enter` (`^enter`) which opens Google Plus. `!HOTKEY` will change the hotkey used for all urls that appear after it. You can create more hotkeys to open different urls. The hotkeys you may use are the same that AutoHotkey allows: read more [here](http://www.autohotkey.com/docs/Hotkeys.htm) (you won't need the 2 colons (`::`) in their examples.). If there is no hotkey specified such as with the first three urls in this example, the default `CTRL + Spacebar` will still work for them. You could add a custom `!HOTKEY` before them to change that.
 
 ### Regex Example
 

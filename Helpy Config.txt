@@ -1,0 +1,5 @@
+; This is the default config file.
+; Customize it to your needs.
+http://www.google.com/search?q=|e|
+http://en.wikipedia.org/w/index.php?search=|e|
+http://www.youtube.com/results?search_query=|e|
