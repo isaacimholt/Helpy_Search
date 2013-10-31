@@ -41,11 +41,14 @@ http://www.google.com/search?q=|e|
 http://en.wikipedia.org/w/index.php?search=|e|
 http://www.youtube.com/results?search_query=|e|
 
-!HOTKEY #space
+!HOTKEY ^!space
 https://twitter.com/search?q=|e|
+
+!HOTKEY ^enter
+https://plus.google.com/s/|e|
 ```
 
-This is the same as the previous example, but it has an added custom hotkey `ALT + Spacebar` (`#space`), which opens twitter with our search. `!HOTKEY` will change the hotkey used for all urls that follow it, until another `!HOTKEY` command is used. The hotkeys you may use are the same that AutoHotkey allows: read more [here](http://www.autohotkey.com/docs/Hotkeys.htm) (you won't need the 2 colons (`::`) in their examples.
+This is the same as the previous example, but it adds 2 custom hotkeys `CTRL + ALT + Spacebar` (`^!space`), which opens twitter with our search, and `CTRL + Enter` (`^enter`) which opens Google Plus. `!HOTKEY` will change the hotkey used for all urls that appear after it. You can create more hotkeys to open different urls. The hotkeys you may use are the same that AutoHotkey allows: read more [here](http://www.autohotkey.com/docs/Hotkeys.htm) (you won't need the 2 colons (`::`) in their examples.)
 
 ### Regex Example
 
@@ -61,7 +64,7 @@ http://www.youtube.com/results?search_query=|e|
 
 This example detects if our selection was a url. If it was, it opens it in your browser -- if it wasn't, it searches Google, Wikipedia, and Youtube for your selection.
 
-[Regex](http://en.wikipedia.org/wiki/Regular_expression) is a way to describe search patterns for text. For instance, we can use it to identify if your selected text is an internet url. The `!REGEX` command marks the start of a regex section, where all urls that follow it are opened if the regex was a match. In the above example, there is a `!REGEX` command that will match urls, followed by empty pipes `||` which open the url directly in your browser. Then we see a blank `!REGEX` with no regex to its right, which acts like a "catch everything" bucket. This is where we can put our searches from before. Always remember: put the more specific regexes at the beginning; putting the url regex after the "catch all" blank regex will cause the url regex to never trigger.
+[Regex](http://en.wikipedia.org/wiki/Regular_expression) is a way to describe search patterns for text. For instance, we can use it to identify if your selected text is an internet url. The `!REGEX` command marks the start of a regex section, where all urls that appear after it are opened if the regex was a match. In the above example, there is a `!REGEX` command that will match urls, followed by empty pipes `||` which open the url directly in your browser. Then we see a blank `!REGEX` with no regex to its right, which acts like a "catch everything" bucket. This is where we can put our searches from before. Always remember: put the more specific regexes at the beginning; putting the url regex after the "catch all" blank regex will cause the url regex to never trigger.
 
 ### Flags
 
@@ -145,3 +148,33 @@ These may appear anywhere within a url.
 - Check that the hotkey you are pressing is actually registered with Helpy by clicking "Show active hotkeys" in the tray menu.
 - You may have written your config incorrectly. Check that you haven't, for instance, put a more specific regex after a generic one.
 - If your config is large and messy, try using "Show config data" from the tray menu. This shows you the simplified version of the config that is actually loaded in memory. It strips out any comments and `!OFF` sections.
+
+## Sample Regexes
+
+```
+; open urls (from: http://gist.github.com/823381)
+!REGEX ^(https?://|www\.)[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?$
+||
+  
+; open partial urls (e.g. gmail.com or it.wikipedia.org)
+!REGEX ^[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?$
+http://||
+
+; open windows files (from: http://stackoverflow.com/a/6416209)
+; !REGEX ^(?:[a-zA-Z]\:|\\\\[\w\.]+\\[\w.$]+)\\(?:[\w]+\\)*\w([\w.])+$
+!REGEX .*\\([^\\]+$)
+||
+
+; open imdb person from key (e.g. nm09123)
+!REGEX ^nm\d+$
+http://www.imdb.com/name/||/
+
+; open imdb title from key (e.g. tt000435)
+!REGEX ^tt\d+$
+http://www.imdb.com/title/||/
+
+; open musicbrainz page from MBID
+; regex was found here: https://github.com/Dremora/foo_musicbrainz/blob/master/QueryByMBIDDialog.h
+!REGEX ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+http://musicbrainz.org/otherlookup/mbid?other-lookup.mbid=||
+```
