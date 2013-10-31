@@ -5,6 +5,7 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
+#Include OrderedArray.ahk
 #Include Array.ahk
 
 ; ==== GLOBALS ==== 
@@ -92,7 +93,8 @@ ParseConfig(config_filename, default_hotkey="^space")
 {
   
   ; init with some defaults, will be stripped later if unused
-  temp_data := Object(default_hotkey, Object("", Object()) )
+  ;temp_data := OrderedArray(default_hotkey, OrderedArray("", OrderedArray()) )
+  temp_data := OrderedArray()
   
   IN_SKIP_SECTION := 0
   CURRENT_HOTKEY := default_hotkey
@@ -113,14 +115,15 @@ ParseConfig(config_filename, default_hotkey="^space")
       continue
     } else if ( tokens[1] = "hotkey" ) {
       CURRENT_HOTKEY := tokens[2]
-      if not temp_data.HasKey( CURRENT_HOTKEY )
-        temp_data.Insert( CURRENT_HOTKEY, Object("", Object()) )
+      CURRENT_REGEX := "" ; reset regex
     } else if ( tokens[1] = "regex" ) {
       CURRENT_REGEX := tokens[2]
+    } else if ( tokens[1] = "url" ) {
+      if not temp_data.HasKey( CURRENT_HOTKEY )
+        temp_data.Insert( CURRENT_HOTKEY, OrderedArray() )
       if not temp_data[CURRENT_HOTKEY].HasKey( CURRENT_REGEX )
         temp_data[CURRENT_HOTKEY].Insert( CURRENT_REGEX, Object() )
-    } else if ( tokens[1] = "url" ) {
-      temp_data[CURRENT_HOTKEY][CURRENT_REGEX].Insert(tokens[2])
+      temp_data[CURRENT_HOTKEY][CURRENT_REGEX].Insert( tokens[2] )
     }
     
   }
