@@ -13,7 +13,7 @@ HOTKEYS := Array()
 
 Menu, tray, add, Open Config, open_config
 Menu, tray, add, Show Active Hotkeys, show_active_hotkeys
-Menu, tray, add, Update Config Hotkeys, update_hotkeys
+Menu, tray, add, Reload Hotkeys from Config, update_hotkeys
 Menu, tray, add, Open Readme online, open_readme
 ; add separator line
 Menu, tray, add
@@ -35,10 +35,6 @@ http://www.youtube.com/results?search_query=|e|
 
 scan_hotkeys(0)
 
-return
-
-init_hotkeys:
-  
 return
 
 update_hotkeys:
@@ -69,6 +65,14 @@ scan_hotkeys(tray_tip=1)
       ; Check str is not empty and doesn't already exist in TEMP_HOTKEYS
       if ( HOTKEY_STR and not TEMP_HOTKEYS.indexOf(HOTKEY_STR) )
         TEMP_HOTKEYS.append(HOTKEY_STR)
+    } else if ( not TEMP_HOTKEYS.len()
+      and config_line
+      and not RegExMatch(config_line, "^;")
+      and not RegExMatch(config_line, "^!OFF")
+      and not RegExMatch(config_line, "^!ON")
+      and not RegExMatch(config_line, "^!REGEX")
+      and not ) {
+      
     }
   }
   
@@ -182,7 +186,7 @@ main:
       HOTKEY_STR := SubStr(config_line, 8)
       ; trim
       HOTKEY_STR := RegExReplace(HOTKEY_STR,"^\s*|\s*$","")
-      msgbox % HOTKEY_STR . " " . HOTKEY_USED
+      ;msgbox % HOTKEY_STR . " " . HOTKEY_USED
       if ( HOTKEY_STR = HOTKEY_USED ) {
         HOTKEY_MATCHES = 1
       } else {
@@ -192,7 +196,7 @@ main:
     }
     
     ; register regex section
-    if ( HOTKEY_MATCHES and RegExMatch(config_line, "^!REGEX") ) {
+    if ( HOTKEY_MATCHES or not HOTKEY_EXISTS and RegExMatch(config_line, "^!REGEX") ) {
       
       REGEX_EXISTS = 1
       

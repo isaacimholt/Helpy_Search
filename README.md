@@ -48,7 +48,7 @@ http://www.youtube.com/results?search_query=|e|
 
 This example detects if our selection was a url. If it was, it opens it in your browser -- if it wasn't, it searches Google, Wikipedia, and Youtube for your selection.
 
-[Regex](http://en.wikipedia.org/wiki/Regular_expression) is a way to describe search patterns for text. For instance, we can use it to identify if your selected text is an internet url. The `!REGEX` command marks the start of a regex section, where all urls that follow it are opened if the regex was a match. In the above example, there is a `!REGEX` command that will match urls, followed by empty pipes `||` which open the url directly in your browser. Then we see a blank `!REGEX` with no regex to its right, which acts like a "catch everything" bucket. This is where we can put our searches from before.
+[Regex](http://en.wikipedia.org/wiki/Regular_expression) is a way to describe search patterns for text. For instance, we can use it to identify if your selected text is an internet url. The `!REGEX` command marks the start of a regex section, where all urls that follow it are opened if the regex was a match. In the above example, there is a `!REGEX` command that will match urls, followed by empty pipes `||` which open the url directly in your browser. Then we see a blank `!REGEX` with no regex to its right, which acts like a "catch everything" bucket. This is where we can put our searches from before. Always remember: put the more specific regexes at the beginning; putting the url regex after the "catch all" blank regex will cause the url regex to never trigger.
 
 ### Flags
 
